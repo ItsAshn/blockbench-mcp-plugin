@@ -264,6 +264,20 @@ See the [OpenCode MCP configuration reference](https://opencode.ai/docs/mcp-serv
 
 Use Agent Skills to orchestrate tool usage.
 
+### Workflow tools
+
+Higher-level tools that replace long chains of low-level calls and the coordinate math agents tend to get wrong:
+
+| Tool | What it does |
+|------|--------------|
+| `build_rig` | Creates a whole bone hierarchy with its cubes in one undoable edit. On box UV projects it packs every new cube's UV net without overlaps (avoiding existing nets) and grows the project UV size when needed. |
+| `paint_cube_faces` | Paints faces in face-local pixels, where (0,0) is the face's top-left as seen on the model, whatever its texture position, mirroring or rotation. Ops: `base` (fill with directional shading and noise), `fill`, `rect`, `pixels`, `pattern` (ASCII pixel art with a palette), `gradient`, `border`, `noise`, `shade`, `erase`. Targets cubes or whole groups. |
+| `capture_views` | Renders several labelled angles into one composite image through a temporary offscreen view, auto-framed from the model bounds, without moving the user's camera. |
+| `generate_animation` | Generates idle, walk, run, attack, hurt, death or jump cycles. Bone roles are detected from names (and X position for unnamed limb sides), and any role can be overridden. |
+| `audit_model` | Reports box UV nets outside the UV canvas or overlapping, texture/UV size mismatches, unpainted faces, cubes outside bones, duplicate bone names, empty groups and left/right names that contradict X position. |
+
+In Blockbench editor space the model faces north (-Z), so its own right side is +X. The workflow tools follow that convention.
+
 ## Extending from another plugin
 
 Other Blockbench plugins can register their own MCP tools through a global `MCP_QUEUE`, without bundling or importing this plugin. See [docs/plugin.md](docs/plugin.md) for the API and an example.

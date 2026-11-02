@@ -11,14 +11,14 @@
     <nav class="sidebar">
       <div class="sidebar-brand">
         <h1>Blockbench MCP</h1>
-        <p>v1.10.0 — API Reference</p>
+        <p>v1.10.1 — API Reference</p>
       </div>
 
       <input id="search" type="text" placeholder="Search tools..." class="search-input" />
 
       <div class="nav-group">
         <p class="nav-heading">Overview</p>
-        <a href="#tools" class="nav-link">Tools <span class="count">(147)</span></a>
+        <a href="#tools" class="nav-link">Tools <span class="count">(152)</span></a>
         <a href="#prompts" class="nav-link">Prompts <span class="count">(6)</span></a>
         <a href="#resources" class="nav-link">Resources <span class="count">(13)</span></a>
       </div>
@@ -44,6 +44,7 @@
         <a href="#cat-textures" class="nav-link">Textures <span class="count">(14)</span></a>
         <a href="#cat-ui-interaction" class="nav-link">UI Interaction <span class="count">(6)</span></a>
         <a href="#cat-uv-mapping" class="nav-link">UV Mapping <span class="count">(5)</span></a>
+        <a href="#cat-workflow" class="nav-link">Workflow <span class="count">(5)</span></a>
         <a href="#cat-geckolib-integration" class="nav-link">GeckoLib Integration <span class="count">(10)</span></a>
         <a href="#cat-hytale-integration" class="nav-link">Hytale Integration <span class="count">(12)</span></a>
       </div>
@@ -52,9 +53,9 @@
     <main class="main">
       <header class="page-header">
         <h1>Blockbench MCP Plugin</h1>
-        <p class="subtitle">API Reference — v1.10.0</p>
+        <p class="subtitle">API Reference — v1.10.1</p>
         <nav class="stats">
-          <a href="#tools"><strong>147</strong> tools (44 stable, 103 experimental)</a>
+          <a href="#tools"><strong>152</strong> tools (44 stable, 108 experimental)</a>
           <a href="#prompts"><strong>6</strong> prompts</a>
           <a href="#resources"><strong>13</strong> resources</a>
         </nav>
@@ -5338,6 +5339,224 @@
       </div>
     </div>
         </section>
+<section id="cat-workflow" class="category-section">
+          <h3 class="category-title">Workflow</h3>
+          <div id="tool-build_rig" class="card tool-card">
+      <div class="card-header">
+        <h3 class="card-name">build_rig</h3>
+        <div class="card-badges">
+          <span class="badge badge-experimental">experimental</span>
+          
+        </div>
+      </div>
+      <p class="card-title">Build Rig</p>
+      <p class="card-desc">Creates a whole bone hierarchy with its cubes in one undoable edit. Bones may reference earlier bones in the same call as parents. On box UV projects it packs every new cube's UV net without overlaps (avoiding existing nets) and grows the project UV size when needed, so a texture painted at one pixel per UV unit maps correctly. Returns bone/cube UUIDs, uv_offsets and the UV size to create the texture at.</p>
+      <div class="overflow-x">
+        <table class="param-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Required</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody><tr>
+      <td class="col-name">bones</td>
+      <td class="col-type">object[]</td>
+      <td><span class="param-required">required</span></td>
+      <td class="col-desc">Bones in parent-before-child order, each with its cubes. <span class="param-meta">[minItems: 1]</span></td>
+    </tr><tr>
+      <td class="col-name">texture</td>
+      <td class="col-type">string</td>
+      <td><span class="param-optional">optional</span></td>
+      <td class="col-desc">Texture to apply to every new cube. Defaults to the project's default texture, if any.</td>
+    </tr><tr>
+      <td class="col-name">pack_uv</td>
+      <td class="col-type">boolean</td>
+      <td><span class="param-optional">optional</span></td>
+      <td class="col-desc">Box UV projects: assign non-overlapping uv_offsets to new cubes, avoiding existing nets, and grow the project UV size if needed. <span class="param-meta">(default: <code>true</code>)</span></td>
+    </tr></tbody>
+    </table>
+      </div>
+    </div>
+<div id="tool-paint_cube_faces" class="card tool-card">
+      <div class="card-header">
+        <h3 class="card-name">paint_cube_faces</h3>
+        <div class="card-badges">
+          <span class="badge badge-experimental">experimental</span>
+          
+        </div>
+      </div>
+      <p class="card-title">Paint Cube Faces</p>
+      <p class="card-desc">Paints cube faces in face-local pixel coordinates: (0,0) is the face's top-left as seen on the model, regardless of where the face sits on the texture, box UV mirroring or UV rotation. Ops: base (fill + directional shading + noise), fill, rect, pixels, pattern (ASCII pixel art with a palette), gradient, border, noise, shade, erase. Target cubes or whole groups; faces accept 'all', 'sides', 'front' (north) and 'back' (south). One undo step. Returns each face's pixel size.</p>
+      <div class="overflow-x">
+        <table class="param-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Required</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody><tr>
+      <td class="col-name">texture</td>
+      <td class="col-type">string</td>
+      <td><span class="param-optional">optional</span></td>
+      <td class="col-desc">Texture UUID or name. Defaults to the texture each face resolves to.</td>
+    </tr><tr>
+      <td class="col-name">targets</td>
+      <td class="col-type">object[]</td>
+      <td><span class="param-required">required</span></td>
+      <td class="col-desc"> <span class="param-meta">[minItems: 1]</span></td>
+    </tr><tr>
+      <td class="col-name">return_texture</td>
+      <td class="col-type">boolean</td>
+      <td><span class="param-optional">optional</span></td>
+      <td class="col-desc">Return the painted texture image. <span class="param-meta">(default: <code>false</code>)</span></td>
+    </tr></tbody>
+    </table>
+      </div>
+    </div>
+<div id="tool-capture_views" class="card tool-card">
+      <div class="card-header">
+        <h3 class="card-name">capture_views</h3>
+        <div class="card-badges">
+          <span class="badge badge-experimental">experimental</span>
+          <span class="badge badge-readonly">read-only</span>
+        </div>
+      </div>
+      <p class="card-title">Capture Views</p>
+      <p class="card-desc">Renders several labelled angles of the model (or one group) into a single composite image using a temporary offscreen view, auto-framed from the model bounds. The user's viewport is not moved. View names follow the model: front shows its face (north/-Z), right shows its own right side (+X).</p>
+      <div class="overflow-x">
+        <table class="param-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Required</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody><tr>
+      <td class="col-name">views</td>
+      <td class="col-type">&quot;front&quot; | &quot;back&quot; | &quot;left&quot; | &quot;right&quot; | &quot;top&quot; | &quot;bottom&quot; | &quot;front_left&quot; | &quot;front_right&quot; | &quot;back_left&quot; | &quot;back_right&quot;[]</td>
+      <td><span class="param-optional">optional</span></td>
+      <td class="col-desc">Angles named from the model's point of view (it faces north/-Z; its right is +X). Default: front, back, right, front_left. <span class="param-meta">[minItems: 1, maxItems: 8]</span></td>
+    </tr><tr>
+      <td class="col-name">tile_size</td>
+      <td class="col-type">integer</td>
+      <td><span class="param-optional">optional</span></td>
+      <td class="col-desc">Pixel size of each square tile. <span class="param-meta">(default: <code>320</code>) [min: 64, max: 1024]</span></td>
+    </tr><tr>
+      <td class="col-name">fov</td>
+      <td class="col-type">number</td>
+      <td><span class="param-optional">optional</span></td>
+      <td class="col-desc">Perspective field of view; small values look near-orthographic. <span class="param-meta">(default: <code>30</code>) [min: 5, max: 90]</span></td>
+    </tr><tr>
+      <td class="col-name">target</td>
+      <td class="col-type">string</td>
+      <td><span class="param-optional">optional</span></td>
+      <td class="col-desc">Group or element to frame. Default: the whole model.</td>
+    </tr><tr>
+      <td class="col-name">labels</td>
+      <td class="col-type">boolean</td>
+      <td><span class="param-optional">optional</span></td>
+      <td class="col-desc"> <span class="param-meta">(default: <code>true</code>)</span></td>
+    </tr><tr>
+      <td class="col-name">format</td>
+      <td class="col-type">&quot;png&quot; | &quot;jpeg&quot; | &quot;webp&quot;</td>
+      <td><span class="param-optional">optional</span></td>
+      <td class="col-desc"> <span class="param-meta">(default: <code>&quot;png&quot;</code>)</span></td>
+    </tr></tbody>
+    </table>
+      </div>
+    </div>
+<div id="tool-generate_animation" class="card tool-card">
+      <div class="card-header">
+        <h3 class="card-name">generate_animation</h3>
+        <div class="card-badges">
+          <span class="badge badge-experimental">experimental</span>
+          
+        </div>
+      </div>
+      <p class="card-title">Generate Animation</p>
+      <p class="card-desc">Generates a base animation cycle (idle, walk, run, attack, hurt, death, jump) for the current rig. Bone roles (root, body, head, arms, legs, tail, wings) are detected from bone names, with X position deciding the side of unnamed limbs (model's right = +X); override any role via bones. Writes through create_animation, so the result is one undoable animation that manage_keyframes can refine.</p>
+      <div class="overflow-x">
+        <table class="param-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Required</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody><tr>
+      <td class="col-name">preset</td>
+      <td class="col-type">&quot;idle&quot; | &quot;walk&quot; | &quot;run&quot; | &quot;attack&quot; | &quot;hurt&quot; | &quot;death&quot; | &quot;jump&quot;</td>
+      <td><span class="param-required">required</span></td>
+      <td class="col-desc"></td>
+    </tr><tr>
+      <td class="col-name">name</td>
+      <td class="col-type">string</td>
+      <td><span class="param-optional">optional</span></td>
+      <td class="col-desc">Animation name. Default: the preset name.</td>
+    </tr><tr>
+      <td class="col-name">bones</td>
+      <td class="col-type">Record&lt;string, string&gt;</td>
+      <td><span class="param-optional">optional</span></td>
+      <td class="col-desc">Role -&gt; bone name overrides. Roles: root, body, head, tail, arm_left, arm_right, leg_left, leg_right, wing_left, wing_right. Unset roles are detected from bone names (and X position for limbs).</td>
+    </tr><tr>
+      <td class="col-name">intensity</td>
+      <td class="col-type">number</td>
+      <td><span class="param-optional">optional</span></td>
+      <td class="col-desc">Amplitude multiplier. <span class="param-meta">(default: <code>1</code>) [min: 0.1, max: 3]</span></td>
+    </tr><tr>
+      <td class="col-name">speed</td>
+      <td class="col-type">number</td>
+      <td><span class="param-optional">optional</span></td>
+      <td class="col-desc">Playback speed multiplier. <span class="param-meta">(default: <code>1</code>) [min: 0.1, max: 5]</span></td>
+    </tr><tr>
+      <td class="col-name">dry_run</td>
+      <td class="col-type">boolean</td>
+      <td><span class="param-optional">optional</span></td>
+      <td class="col-desc">Only report detected roles and keyframes. <span class="param-meta">(default: <code>false</code>)</span></td>
+    </tr></tbody>
+    </table>
+      </div>
+    </div>
+<div id="tool-audit_model" class="card tool-card">
+      <div class="card-header">
+        <h3 class="card-name">audit_model</h3>
+        <div class="card-badges">
+          <span class="badge badge-experimental">experimental</span>
+          <span class="badge badge-readonly">read-only</span>
+        </div>
+      </div>
+      <p class="card-title">Audit Model</p>
+      <p class="card-desc">Checks the project for problems: box UV nets outside the UV canvas or overlapping, texture/UV size mismatches, unpainted or untextured faces, cubes outside bones in bone-rig formats, duplicate bone names, empty groups and left/right names that contradict X position. Returns a verdict and issues by severity.</p>
+      <div class="overflow-x">
+        <table class="param-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Required</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody><tr>
+      <td class="col-name">check_pixels</td>
+      <td class="col-type">boolean</td>
+      <td><span class="param-optional">optional</span></td>
+      <td class="col-desc">Read texture pixels to find unpainted faces. <span class="param-meta">(default: <code>true</code>)</span></td>
+    </tr></tbody>
+    </table>
+      </div>
+    </div>
+        </section>
 <section id="cat-geckolib-integration" class="category-section">
           <h3 class="category-title">GeckoLib Integration</h3>
           <div id="tool-geckolib_get_format_info" class="card tool-card">
@@ -6301,7 +6520,7 @@
       </section>
 
       <footer class="page-footer">
-        Generated 2026-10-15T21:27:49.261Z from Zod schemas
+        Generated 2026-11-02T11:01:13.441Z from Zod schemas
       </footer>
     </main>
   </div>

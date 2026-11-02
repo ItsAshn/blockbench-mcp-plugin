@@ -1,6 +1,6 @@
 {
-  "version": "1.10.0",
-  "generatedAt": "2026-10-15T21:27:49.261Z",
+  "version": "1.10.1",
+  "generatedAt": "2026-11-02T11:01:13.441Z",
   "tools": [
     {
       "name": "place_cube",
@@ -9262,6 +9262,840 @@
             "required": [
               "id"
             ],
+            "additionalProperties": false
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "build_rig",
+      "title": "Build Rig",
+      "description": "Creates a whole bone hierarchy with its cubes in one undoable edit. Bones may reference earlier bones in the same call as parents. On box UV projects it packs every new cube's UV net without overlaps (avoiding existing nets) and grows the project UV size when needed, so a texture painted at one pixel per UV unit maps correctly. Returns bone/cube UUIDs, uv_offsets and the UV size to create the texture at.",
+      "status": "experimental",
+      "category": "Workflow",
+      "annotations": {
+        "destructiveHint": false
+      },
+      "parameters": {
+        "$ref": "#/definitions/build_rig",
+        "definitions": {
+          "build_rig": {
+            "type": "object",
+            "properties": {
+              "bones": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "parent": {
+                      "type": "string",
+                      "description": "Parent bone: a bone earlier in this list, an existing group name/UUID, or omitted for the root.",
+                      "markdownDescription": "Parent bone: a bone earlier in this list, an existing group name/UUID, or omitted for the root."
+                    },
+                    "origin": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 3,
+                      "maxItems": 3,
+                      "description": "Bone pivot.",
+                      "markdownDescription": "Bone pivot."
+                    },
+                    "rotation": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 3,
+                      "maxItems": 3,
+                      "description": "Bone rotation in degrees.",
+                      "markdownDescription": "Bone rotation in degrees."
+                    },
+                    "cubes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "from": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 3,
+                            "maxItems": 3,
+                            "description": "Minimum corner.",
+                            "markdownDescription": "Minimum corner."
+                          },
+                          "to": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 3,
+                            "maxItems": 3,
+                            "description": "Maximum corner.",
+                            "markdownDescription": "Maximum corner."
+                          },
+                          "origin": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 3,
+                            "maxItems": 3,
+                            "description": "Cube pivot. Defaults to the bone origin.",
+                            "markdownDescription": "Cube pivot. Defaults to the bone origin."
+                          },
+                          "rotation": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 3,
+                            "maxItems": 3,
+                            "description": "Cube rotation in degrees.",
+                            "markdownDescription": "Cube rotation in degrees."
+                          },
+                          "inflate": {
+                            "type": "number"
+                          },
+                          "mirror_uv": {
+                            "type": "boolean"
+                          },
+                          "uv_offset": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "description": "Explicit box UV offset; skips auto packing for this cube.",
+                            "markdownDescription": "Explicit box UV offset; skips auto packing for this cube."
+                          }
+                        },
+                        "required": [
+                          "from",
+                          "to"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "origin"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "description": "Bones in parent-before-child order, each with its cubes.",
+                "markdownDescription": "Bones in parent-before-child order, each with its cubes."
+              },
+              "texture": {
+                "type": "string",
+                "description": "Texture to apply to every new cube. Defaults to the project's default texture, if any.",
+                "markdownDescription": "Texture to apply to every new cube. Defaults to the project's default texture, if any."
+              },
+              "pack_uv": {
+                "type": "boolean",
+                "default": true,
+                "description": "Box UV projects: assign non-overlapping uv_offsets to new cubes, avoiding existing nets, and grow the project UV size if needed.",
+                "markdownDescription": "Box UV projects: assign non-overlapping uv_offsets to new cubes, avoiding existing nets, and grow the project UV size if needed."
+              }
+            },
+            "required": [
+              "bones"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "paint_cube_faces",
+      "title": "Paint Cube Faces",
+      "description": "Paints cube faces in face-local pixel coordinates: (0,0) is the face's top-left as seen on the model, regardless of where the face sits on the texture, box UV mirroring or UV rotation. Ops: base (fill + directional shading + noise), fill, rect, pixels, pattern (ASCII pixel art with a palette), gradient, border, noise, shade, erase. Target cubes or whole groups; faces accept 'all', 'sides', 'front' (north) and 'back' (south). One undo step. Returns each face's pixel size.",
+      "status": "experimental",
+      "category": "Workflow",
+      "annotations": {
+        "destructiveHint": false
+      },
+      "parameters": {
+        "$ref": "#/definitions/paint_cube_faces",
+        "definitions": {
+          "paint_cube_faces": {
+            "type": "object",
+            "properties": {
+              "texture": {
+                "type": "string",
+                "description": "Texture UUID or name. Defaults to the texture each face resolves to.",
+                "markdownDescription": "Texture UUID or name. Defaults to the texture each face resolves to."
+              },
+              "targets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "cube": {
+                      "type": "string",
+                      "description": "Cube UUID or name.",
+                      "markdownDescription": "Cube UUID or name."
+                    },
+                    "group": {
+                      "type": "string",
+                      "description": "Group UUID or name: paints every cube inside it.",
+                      "markdownDescription": "Group UUID or name: paints every cube inside it."
+                    },
+                    "faces": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "north",
+                          "south",
+                          "east",
+                          "west",
+                          "up",
+                          "down",
+                          "all",
+                          "sides",
+                          "front",
+                          "back"
+                        ]
+                      },
+                      "description": "Faces to paint. 'sides' = north/south/east/west, 'front' = north, 'back' = south. Default: all.",
+                      "markdownDescription": "Faces to paint. 'sides' = north/south/east/west, 'front' = north, 'back' = south. Default: all."
+                    },
+                    "ops": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "fill"
+                              },
+                              "color": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "number"
+                                    },
+                                    "minItems": 3,
+                                    "maxItems": 4
+                                  }
+                                ],
+                                "description": "Color as #rrggbb, #rrggbbaa, #rgb, or [r, g, b(, a)] with 0-255 values.",
+                                "markdownDescription": "Color as #rrggbb, #rrggbbaa, #rgb, or [r, g, b(, a)] with 0-255 values."
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "color"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Fill the whole face.",
+                            "markdownDescription": "Fill the whole face."
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "base"
+                              },
+                              "color": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "number"
+                                    },
+                                    "minItems": 3,
+                                    "maxItems": 4
+                                  }
+                                ],
+                                "description": "Color as #rrggbb, #rrggbbaa, #rgb, or [r, g, b(, a)] with 0-255 values.",
+                                "markdownDescription": "Color as #rrggbb, #rrggbbaa, #rgb, or [r, g, b(, a)] with 0-255 values."
+                              },
+                              "shade": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 2,
+                                "description": "Directional shading strength (top lit, bottom dark, bottom-edge occlusion). Default 1; 0 disables.",
+                                "markdownDescription": "Directional shading strength (top lit, bottom dark, bottom-edge occlusion). Default 1; 0 disables."
+                              },
+                              "noise": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 0.5,
+                                "description": "Per-pixel brightness jitter. Default 0.04.",
+                                "markdownDescription": "Per-pixel brightness jitter. Default 0.04."
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "color"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Base coat: fill plus face-direction shading and subtle noise, so faces never look flat.",
+                            "markdownDescription": "Base coat: fill plus face-direction shading and subtle noise, so faces never look flat."
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "rect"
+                              },
+                              "x": {
+                                "type": "number",
+                                "description": "Left edge. Face-local pixels; negative values count from the far edge (-1 = last).",
+                                "markdownDescription": "Left edge. Face-local pixels; negative values count from the far edge (-1 = last)."
+                              },
+                              "y": {
+                                "type": "number",
+                                "description": "Top edge. Face-local pixels; negative values count from the far edge (-1 = last).",
+                                "markdownDescription": "Top edge. Face-local pixels; negative values count from the far edge (-1 = last)."
+                              },
+                              "w": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "description": "Width; defaults to the remaining face width.",
+                                "markdownDescription": "Width; defaults to the remaining face width."
+                              },
+                              "h": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "description": "Height; defaults to the remaining face height.",
+                                "markdownDescription": "Height; defaults to the remaining face height."
+                              },
+                              "color": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "number"
+                                    },
+                                    "minItems": 3,
+                                    "maxItems": 4
+                                  }
+                                ],
+                                "description": "Color as #rrggbb, #rrggbbaa, #rgb, or [r, g, b(, a)] with 0-255 values.",
+                                "markdownDescription": "Color as #rrggbb, #rrggbbaa, #rgb, or [r, g, b(, a)] with 0-255 values."
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "x",
+                              "y",
+                              "color"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "pixels"
+                              },
+                              "points": {
+                                "type": "array",
+                                "items": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "number"
+                                  },
+                                  "minItems": 2,
+                                  "maxItems": 2
+                                },
+                                "minItems": 1,
+                                "description": "Face-local [x, y] points; negative values count from the far edge.",
+                                "markdownDescription": "Face-local [x, y] points; negative values count from the far edge."
+                              },
+                              "color": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "number"
+                                    },
+                                    "minItems": 3,
+                                    "maxItems": 4
+                                  }
+                                ],
+                                "description": "Color as #rrggbb, #rrggbbaa, #rgb, or [r, g, b(, a)] with 0-255 values.",
+                                "markdownDescription": "Color as #rrggbb, #rrggbbaa, #rgb, or [r, g, b(, a)] with 0-255 values."
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "points",
+                              "color"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "pattern"
+                              },
+                              "rows": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "minItems": 1,
+                                "description": "ASCII pixel art, one string per row. Each character maps through palette; '.' and space leave pixels untouched.",
+                                "markdownDescription": "ASCII pixel art, one string per row. Each character maps through palette; '.' and space leave pixels untouched."
+                              },
+                              "palette": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "number"
+                                      },
+                                      "minItems": 3,
+                                      "maxItems": 4
+                                    }
+                                  ],
+                                  "description": "Color as #rrggbb, #rrggbbaa, #rgb, or [r, g, b(, a)] with 0-255 values.",
+                                  "markdownDescription": "Color as #rrggbb, #rrggbbaa, #rgb, or [r, g, b(, a)] with 0-255 values."
+                                },
+                                "description": "Character -> color, e.g. {\"e\": \"#222\", \"w\": \"#fff\"}.",
+                                "markdownDescription": "Character -> color, e.g. {\"e\": \"#222\", \"w\": \"#fff\"}."
+                              },
+                              "x": {
+                                "type": "number",
+                                "description": "Offset added after alignment.",
+                                "markdownDescription": "Offset added after alignment."
+                              },
+                              "y": {
+                                "type": "number",
+                                "description": "Offset added after alignment.",
+                                "markdownDescription": "Offset added after alignment."
+                              },
+                              "align": {
+                                "type": "string",
+                                "enum": [
+                                  "top-left",
+                                  "top-center",
+                                  "center",
+                                  "bottom-center"
+                                ],
+                                "description": "Anchor of the pattern on the face. Default top-left.",
+                                "markdownDescription": "Anchor of the pattern on the face. Default top-left."
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "rows",
+                              "palette"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Stamp pixel art (faces, emblems, buckles) without computing coordinates.",
+                            "markdownDescription": "Stamp pixel art (faces, emblems, buckles) without computing coordinates."
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "gradient"
+                              },
+                              "from": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "number"
+                                    },
+                                    "minItems": 3,
+                                    "maxItems": 4
+                                  }
+                                ],
+                                "description": "Start color (top or left).",
+                                "markdownDescription": "Start color (top or left)."
+                              },
+                              "to": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "number"
+                                    },
+                                    "minItems": 3,
+                                    "maxItems": 4
+                                  }
+                                ],
+                                "description": "End color (bottom or right).",
+                                "markdownDescription": "End color (bottom or right)."
+                              },
+                              "direction": {
+                                "type": "string",
+                                "enum": [
+                                  "vertical",
+                                  "horizontal"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "from",
+                              "to"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "border"
+                              },
+                              "color": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "number"
+                                    },
+                                    "minItems": 3,
+                                    "maxItems": 4
+                                  }
+                                ],
+                                "description": "Color as #rrggbb, #rrggbbaa, #rgb, or [r, g, b(, a)] with 0-255 values.",
+                                "markdownDescription": "Color as #rrggbb, #rrggbbaa, #rgb, or [r, g, b(, a)] with 0-255 values."
+                              },
+                              "sides": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "enum": [
+                                    "top",
+                                    "bottom",
+                                    "left",
+                                    "right"
+                                  ]
+                                },
+                                "description": "Default: all four.",
+                                "markdownDescription": "Default: all four."
+                              },
+                              "width": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "color"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "noise"
+                              },
+                              "amount": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1,
+                                "description": "Brightness jitter, e.g. 0.06.",
+                                "markdownDescription": "Brightness jitter, e.g. 0.06."
+                              },
+                              "seed": {
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "amount"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "shade"
+                              },
+                              "factor": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 4,
+                                "description": "Brightness multiplier for painted pixels.",
+                                "markdownDescription": "Brightness multiplier for painted pixels."
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "factor"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "erase"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Clear the face to transparent.",
+                            "markdownDescription": "Clear the face to transparent."
+                          }
+                        ]
+                      },
+                      "description": "Operations applied in order to each selected face. Empty to only report face sizes.",
+                      "markdownDescription": "Operations applied in order to each selected face. Empty to only report face sizes."
+                    }
+                  },
+                  "required": [
+                    "ops"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1
+              },
+              "return_texture": {
+                "type": "boolean",
+                "default": false,
+                "description": "Return the painted texture image.",
+                "markdownDescription": "Return the painted texture image."
+              }
+            },
+            "required": [
+              "targets"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "capture_views",
+      "title": "Capture Views",
+      "description": "Renders several labelled angles of the model (or one group) into a single composite image using a temporary offscreen view, auto-framed from the model bounds. The user's viewport is not moved. View names follow the model: front shows its face (north/-Z), right shows its own right side (+X).",
+      "status": "experimental",
+      "category": "Workflow",
+      "annotations": {
+        "readOnlyHint": true
+      },
+      "parameters": {
+        "$ref": "#/definitions/capture_views",
+        "definitions": {
+          "capture_views": {
+            "type": "object",
+            "properties": {
+              "views": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "front",
+                    "back",
+                    "left",
+                    "right",
+                    "top",
+                    "bottom",
+                    "front_left",
+                    "front_right",
+                    "back_left",
+                    "back_right"
+                  ]
+                },
+                "minItems": 1,
+                "maxItems": 8,
+                "description": "Angles named from the model's point of view (it faces north/-Z; its right is +X). Default: front, back, right, front_left.",
+                "markdownDescription": "Angles named from the model's point of view (it faces north/-Z; its right is +X). Default: front, back, right, front_left."
+              },
+              "tile_size": {
+                "type": "integer",
+                "minimum": 64,
+                "maximum": 1024,
+                "default": 320,
+                "description": "Pixel size of each square tile.",
+                "markdownDescription": "Pixel size of each square tile."
+              },
+              "fov": {
+                "type": "number",
+                "minimum": 5,
+                "maximum": 90,
+                "default": 30,
+                "description": "Perspective field of view; small values look near-orthographic.",
+                "markdownDescription": "Perspective field of view; small values look near-orthographic."
+              },
+              "target": {
+                "type": "string",
+                "description": "Group or element to frame. Default: the whole model.",
+                "markdownDescription": "Group or element to frame. Default: the whole model."
+              },
+              "labels": {
+                "type": "boolean",
+                "default": true
+              },
+              "format": {
+                "type": "string",
+                "enum": [
+                  "png",
+                  "jpeg",
+                  "webp"
+                ],
+                "default": "png"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "generate_animation",
+      "title": "Generate Animation",
+      "description": "Generates a base animation cycle (idle, walk, run, attack, hurt, death, jump) for the current rig. Bone roles (root, body, head, arms, legs, tail, wings) are detected from bone names, with X position deciding the side of unnamed limbs (model's right = +X); override any role via bones. Writes through create_animation, so the result is one undoable animation that manage_keyframes can refine.",
+      "status": "experimental",
+      "category": "Workflow",
+      "annotations": {
+        "destructiveHint": false
+      },
+      "parameters": {
+        "$ref": "#/definitions/generate_animation",
+        "definitions": {
+          "generate_animation": {
+            "type": "object",
+            "properties": {
+              "preset": {
+                "type": "string",
+                "enum": [
+                  "idle",
+                  "walk",
+                  "run",
+                  "attack",
+                  "hurt",
+                  "death",
+                  "jump"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "description": "Animation name. Default: the preset name.",
+                "markdownDescription": "Animation name. Default: the preset name."
+              },
+              "bones": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Role -> bone name overrides. Roles: root, body, head, tail, arm_left, arm_right, leg_left, leg_right, wing_left, wing_right. Unset roles are detected from bone names (and X position for limbs).",
+                "markdownDescription": "Role -> bone name overrides. Roles: root, body, head, tail, arm_left, arm_right, leg_left, leg_right, wing_left, wing_right. Unset roles are detected from bone names (and X position for limbs)."
+              },
+              "intensity": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 3,
+                "default": 1,
+                "description": "Amplitude multiplier.",
+                "markdownDescription": "Amplitude multiplier."
+              },
+              "speed": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 5,
+                "default": 1,
+                "description": "Playback speed multiplier.",
+                "markdownDescription": "Playback speed multiplier."
+              },
+              "dry_run": {
+                "type": "boolean",
+                "default": false,
+                "description": "Only report detected roles and keyframes.",
+                "markdownDescription": "Only report detected roles and keyframes."
+              }
+            },
+            "required": [
+              "preset"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "audit_model",
+      "title": "Audit Model",
+      "description": "Checks the project for problems: box UV nets outside the UV canvas or overlapping, texture/UV size mismatches, unpainted or untextured faces, cubes outside bones in bone-rig formats, duplicate bone names, empty groups and left/right names that contradict X position. Returns a verdict and issues by severity.",
+      "status": "experimental",
+      "category": "Workflow",
+      "annotations": {
+        "readOnlyHint": true
+      },
+      "parameters": {
+        "$ref": "#/definitions/audit_model",
+        "definitions": {
+          "audit_model": {
+            "type": "object",
+            "properties": {
+              "check_pixels": {
+                "type": "boolean",
+                "default": true,
+                "description": "Read texture pixels to find unpainted faces.",
+                "markdownDescription": "Read texture pixels to find unpainted faces."
+              }
+            },
             "additionalProperties": false
           }
         },

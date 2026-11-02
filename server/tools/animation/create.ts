@@ -8,7 +8,7 @@ import { animationToolDocs } from "./docs";
 import { createAnimationParameters } from "./schemas";
 import { TRANSFORM_CHANNELS, applyKeyframeValues, fitSnappingToKeyframes, getAnimationClass, requireBoneAnimator } from "./shared";
 
-type CreateAnimationInput = z.infer<typeof createAnimationParameters>;
+export type CreateAnimationInput = z.infer<typeof createAnimationParameters>;
 type BoneKeyframeInput = CreateAnimationInput["bones"][string][number];
 
 /** Keyframes requested for one existing bone, resolved before the undo edit starts. */
@@ -135,6 +135,43 @@ function buildAnimationKeyframes(animation: BBAnimation, { targets, particles }:
 }
 
 /**
+ * Builds and selects a new animation in a single undo entry. Shared by
+ * create_animation and generate_animation.
+ *
+ * @returns JSON summary with the animation UUID, name, length and snapping.
+ * @throws When the format has no animation mode or the input is invalid.
+ */
+export function createAnimationFromInput(input: CreateAnimationInput): string {
+  if (!Project || !Format.animation_mode) {
+    throw new Error("The current project format does not support animations. Use get_capabilities to inspect supported formats.");
+  }
+  const validated = validateAnimationInput(input);
+  const animations: BBAnimation[] = [];
+  const { animation, grid } = runUndoableAnimationEdit({ animations }, "Create animation", () => {
+    const AnimationClass = getAnimationClass();
+    const created = new AnimationClass({
+      name: prefixedAnimationName(input.name), loop: input.loop ? "loop" : "once",
+      length: input.animation_length ?? validated.latestTime,
+    });
+    animations.push(created);
+    created.add(false);
+    buildAnimationKeyframes(created, validated);
+    // Inside the edit, so Undo/Redo restore the fitted grid with the keys.
+    const fitted = fitSnappingToKeyframes(created);
+    created.select();
+    Animator.preview();
+    return { animation: created, grid: fitted };
+  });
+  return JSON.stringify({
+    uuid: animation.uuid, name: animation.name, length: animation.length, loop: animation.loop, bones: validated.targets.length,
+    snapping: grid.snapping,
+    ...(grid.off_grid_times.length
+      ? { warning: `Key times ${grid.off_grid_times.join(", ")} do not fit any grid from 10 to 100 fps; export will round them to 1/${grid.snapping} s.` }
+      : {}),
+  });
+}
+
+/**
  * Registers `create_animation`, which builds and selects a new animation in a
  * single undo entry. Call only after Blockbench globals exist.
  */
@@ -145,33 +182,7 @@ export function registerCreateAnimationTool(): void {
       ...animationToolDocs[0],
       parameters: createAnimationParameters,
       async execute(input) {
-        if (!Project || !Format.animation_mode) {
-          throw new Error("The current project format does not support animations. Use get_capabilities to inspect supported formats.");
-        }
-        const validated = validateAnimationInput(input);
-        const animations: BBAnimation[] = [];
-        const { animation, grid } = runUndoableAnimationEdit({ animations }, "Create animation", () => {
-          const AnimationClass = getAnimationClass();
-          const created = new AnimationClass({
-            name: prefixedAnimationName(input.name), loop: input.loop ? "loop" : "once",
-            length: input.animation_length ?? validated.latestTime,
-          });
-          animations.push(created);
-          created.add(false);
-          buildAnimationKeyframes(created, validated);
-          // Inside the edit, so Undo/Redo restore the fitted grid with the keys.
-          const fitted = fitSnappingToKeyframes(created);
-          created.select();
-          Animator.preview();
-          return { animation: created, grid: fitted };
-        });
-        return JSON.stringify({
-          uuid: animation.uuid, name: animation.name, length: animation.length, loop: animation.loop, bones: validated.targets.length,
-          snapping: grid.snapping,
-          ...(grid.off_grid_times.length
-            ? { warning: `Key times ${grid.off_grid_times.join(", ")} do not fit any grid from 10 to 100 fps; export will round them to 1/${grid.snapping} s.` }
-            : {}),
-        });
+        return createAnimationFromInput(input);
       },
     },
     animationToolDocs[0].status

@@ -27,6 +27,7 @@ import { materialInstanceToolDocs } from "@/server/tools/material-instances";
 import { uvToolDocs } from "@/server/tools/uv";
 import { historyToolDocs } from "@/server/tools/history";
 import { exportToolDocs } from "@/server/tools/export";
+import { workflowToolDocs } from "@/server/tools/workflow/docs";
 
 export interface ICategoryGroup {
   category: string;
@@ -53,6 +54,7 @@ export const toolManifest: ICategoryGroup[] = [
   { category: "Textures", tools: textureToolDocs },
   { category: "UI Interaction", tools: [...uiToolDocs, ...modeToolDocs] },
   { category: "UV Mapping", tools: [...uvToolDocs, ...cubeUvToolDocs] },
+  { category: "Workflow", tools: workflowToolDocs },
   { category: "GeckoLib Integration", tools: geckolibToolDocs },
   { category: "Hytale Integration", tools: hytaleToolDocs },
 ];
