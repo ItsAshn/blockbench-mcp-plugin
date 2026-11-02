@@ -356,6 +356,25 @@ function callIfPresent(target: unknown, method: string): unknown {
 }
 
 /**
+ * Disposes orbit controls. Blockbench 5.2's bundled `OrbitControls#dispose`
+ * removes a `contextmenu` listener through a free `onContextMenu` identifier
+ * that is never defined, so it throws a ReferenceError on its first line and
+ * none of its listeners (including the `keydown` one on `window`) are removed.
+ * A temporary no-op global lets the whole method run; removing an unknown
+ * listener is harmless.
+ */
+function disposeControls(controls: unknown): void {
+  const scope = globalThis as Record<string, unknown>;
+  const shimmed = !("onContextMenu" in scope);
+  if (shimmed) scope.onContextMenu = () => undefined;
+  try {
+    callIfPresent(controls, "dispose");
+  } finally {
+    if (shimmed) delete scope.onContextMenu;
+  }
+}
+
+/**
  * Disposes a preview completely. In Blockbench 5.2, `Preview#delete` disposes
  * the renderer, forces the WebGL context loss and removes the canvas, but does
  * not dispose the orbit controls: their `keydown` listener on `window` (and,
@@ -366,7 +385,7 @@ function disposePreview(preview: Preview): void {
   try {
     if (typeof Reflect.get(preview, "delete") === "function") preview.delete();
   } finally {
-    callIfPresent(Reflect.get(preview, "controls"), "dispose");
+    disposeControls(Reflect.get(preview, "controls"));
     // On 5.2 the context is already lost and this is skipped. A host whose
     // delete() leaves the context alive has it released here rather than at
     // garbage collection, while Chromium caps the live contexts of a page.
