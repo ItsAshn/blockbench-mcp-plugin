@@ -130,14 +130,33 @@ function addGroupedTexture(texture: Texture, textureGroup: TextureGroup): void {
   commitMaterialEdit(textureGroup, changes, {}, "Agent created texture", [texture]);
 }
 
+/**
+ * Whether adding `texture` should adopt its size as the project UV size.
+ * Blockbench's own texture import does this for box UV formats with a single
+ * texture (e.g. Bedrock entities) when the first texture arrives; a detached
+ * texture added through the API skips that path, which left box UV nets
+ * addressing a 16x16 UV area on a larger texture.
+ */
+export function shouldSyncProjectUvSize(texture: Texture): boolean {
+  if (!Project || Format.per_texture_uv_size || !Format.single_texture || !Project.box_uv) return false;
+  if (Project.textures.some(existing => existing !== texture)) return false;
+  return Project.texture_width !== texture.width || Project.texture_height !== texture.height;
+}
+
 /** Adds an ungrouped texture with its bitmap in one undo edit. */
 function addUngroupedTexture(texture: Texture): void {
   // Starts empty and is filled inside the edit: Blockbench re-reads this aspect
   // array, so undo removes the new texture and redo restores its bitmap.
   const created: Texture[] = [];
-  runUndoableEdit({ textures: created, bitmap: true }, "Agent created texture", () => {
+  const syncUv = shouldSyncProjectUvSize(texture);
+  runUndoableEdit({ textures: created, bitmap: true, ...(syncUv ? { uv_mode: true } : {}) }, "Agent created texture", () => {
     created.push(texture);
     texture.add(false);
+    if (syncUv) {
+      Project!.texture_width = texture.width;
+      Project!.texture_height = texture.height;
+      Canvas.updateAllUVs();
+    }
     Canvas.updateAll();
   });
 }

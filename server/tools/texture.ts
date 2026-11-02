@@ -495,7 +495,16 @@ export function registerTextureTools(): void {
       }
       texture.updateMaterial();
       const result = imageContent({ url: texture.getDataURL() });
+      const uvBefore = [Project.texture_width, Project.texture_height];
       addCreatedTexture(texture, textureGroup);
+      if (uvBefore[0] !== Project.texture_width || uvBefore[1] !== Project.texture_height) {
+        return {
+          content: [
+            ...result.content,
+            { type: "text" as const, text: `Project UV size set to ${Project.texture_width}x${Project.texture_height} to match the first texture, as Blockbench's own import does for box UV formats.` },
+          ],
+        };
+      }
       return result;
     },
   }, textureToolDocs[0].status);
